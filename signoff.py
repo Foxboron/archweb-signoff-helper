@@ -74,8 +74,7 @@ class Session:
         r = self.client.get(signoff_page)
         if r.url != signoff_page:
             self._login()
-            self.get_signoffs()
-            return
+            return self.get_signoffs()
         return r.text
 
 
