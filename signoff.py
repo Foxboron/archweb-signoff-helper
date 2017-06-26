@@ -105,7 +105,9 @@ res = []
 for i in rules:
     res.extend(root.xpath(i))
 
-cmd = "pacman -Sl testing | awk '/\[installed\]$/ { print $2 }' | xargs expac '%e %n' | awk '{ b=( ($1==\"(null)\") ? $2 : $1); printf \"%-20s %s %s\\n\",b,$2,$3 }' | sort | awk '{ print $1 }' | uniq"
+cmd = """pacman -Sl testing | awk '/\[installed\]$/ { print $2 }' |
+         xargs expac '%e %n' | awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
+         uniq"""
 packages = [i for i in subprocess.getoutput(cmd).split("\n")]
 for i in res:
     pkg = parse_package(i)
