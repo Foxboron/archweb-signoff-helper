@@ -1,20 +1,18 @@
 #!/usr/bin/python
 import os
 import sys
-import http
 import subprocess
 import configparser
 from http import cookiejar
 from itertools import product
-from subprocess import call
 
 import requests
 from lxml import etree
 
 
 HOME = os.path.expanduser("~")
-CONFIG_DIR=os.environ.get('XDG_CONFIG_DIR', HOME+'/.config')
-CACHE_DIR=os.environ.get('XDG_CACHE_DIR', HOME+"/.cache")
+CONFIG_DIR = os.environ.get('XDG_CONFIG_DIR', HOME+'/.config')
+CACHE_DIR = os.environ.get('XDG_CACHE_DIR', HOME+"/.cache")
 
 USERNAME = None
 PASSWORD = None
@@ -23,8 +21,8 @@ CONFIG = configparser.ConfigParser()
 if not os.path.isdir(CACHE_DIR):
     os.mkdir(CACHE_DIR)
 if not os.path.isfile(CACHE_DIR+"/archweb/cookies"):
-    open(CACHE_DIR+"/archweb/cookies","a")
-    
+    open(CACHE_DIR+"/archweb/cookies", "a")
+
 if os.path.isfile(CONFIG_DIR+"/archweb/archweb.conf"):
     CONFIG.read(CONFIG_DIR+"/archweb/archweb.conf")
 else:
@@ -46,7 +44,7 @@ class Session:
     def __init__(self):
         self.url = "https://www.archlinux.org/login/"
         self.client = requests.session()
-        cj = http.cookiejar.LWPCookieJar(CACHE_DIR+"/archweb/cookies")
+        cj = cookiejar.LWPCookieJar(CACHE_DIR+"/archweb/cookies")
         try:
             cj.load(ignore_discard=True)
         except:
@@ -58,11 +56,12 @@ class Session:
         csrftoken = self.client.cookies._cookies["www.archlinux.org"]["/"]["csrftoken"].value
 
         login_data = {"username": USERNAME,
-                      "password": PASSWORD, 
-                      "csrfmiddlewaretoken": csrftoken
-                    }
+                      "password": PASSWORD,
+                      "csrfmiddlewaretoken": csrftoken}
 
-        r = self.client.post(self.url, data=login_data, headers={"referer": "https://www.archlinux.org/login","origin": "https://www.archlinux.org"})
+        r = self.client.post(self.url, data=login_data,
+                             headers={"referer": "https://www.archlinux.org/login",
+                                      "origin": "https://www.archlinux.org"})
         if r.status_code != 200:
             print("Login failed")
             sys.exit()
@@ -78,21 +77,18 @@ class Session:
 
 
 def get_xpath_rules():
-    ret = []
     xpath = ".//tr[contains(@class, '{}') and contains(@class, '{}')]"
     repos = CONFIG["Repositories"].items()
     archs = CONFIG["Architectures"].items()
-    for r,a in product(repos, archs):
-        ret.append(xpath.format(r[0],a[0]))
-    return ret
+    return [xpath.format(r[0], a[0]) for r, a in product(repos, archs)]
+
 
 def parse_signoff(elm):
-    r = elm.xpath(".//li[@class='signed-username']")
-    return [i.text for i in r]
+    return [i.text for i in elm.xpath(".//li[@class='signed-username']")]
+
 
 def parse_package(elm):
-    r = elm.xpath(".//a")[0]
-    return r.text
+    return elm.xpath(".//a")[0].text
 
 
 s = Session()
