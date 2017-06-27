@@ -1,53 +1,52 @@
 #!/usr/bin/python
-import sys
 import os
+import sys
 import http
 import subprocess
 import configparser
-from subprocess import call
-
 from http import cookiejar
-
 from itertools import product
+from subprocess import call
 
 import requests
 from lxml import etree
 
 
 HOME = os.path.expanduser("~")
-CACHE=HOME+"/.cache/archweb"
+CONFIG_DIR=os.environ.get('XDG_CONFIG_DIR', HOME+'/.config')
+CACHE_DIR=os.environ.get('XDG_CACHE_DIR', HOME+"/.cache")
 
 USERNAME = None
 PASSWORD = None
 CONFIG = configparser.ConfigParser()
 
-if not os.path.isdir(CACHE):
-    os.mkdir(CACHE)
-if not os.path.isdir(CACHE+"/cookies"):
-    open(CACHE+"/cookies","a")
+if not os.path.isdir(CACHE_DIR):
+    os.mkdir(CACHE_DIR)
+if not os.path.isfile(CACHE_DIR+"/archweb/cookies"):
+    open(CACHE_DIR+"/archweb/cookies","a")
     
-if os.path.isfile(HOME+"/.config/archweb/archweb.conf"):
-    CONFIG.read(HOME+"/.config/archweb/archweb.conf")
-    if CONFIG.has_section("User"):
-        USERNAME = CONFIG["User"]["Username"] if CONFIG.has_option("User", "Username") else ""
-        PASSWORD = CONFIG["User"]["Password"] if CONFIG.has_option("User", "Password") else ""
-if not USERNAME and not os.environ.get("ARCHWEB_USER", False):
-    print("Missing username")
+if os.path.isfile(CONFIG_DIR+"/archweb/archweb.conf"):
+    CONFIG.read(CONFIG_DIR+"/archweb/archweb.conf")
+else:
+    print("Missing config file")
     sys.exit()
-elif os.environ.get("ARCHWEB_USER", False):
-    USERNAME = os.environ["ARCHWEB_USER"]
-if not PASSWORD and not os.environ.get("ARCHWEB_PASSWORD", False):
-    print("Missing password")
-    sys.exit()
-elif os.environ.get("ARCHWEB_PASSWORD", False):
-    PASSWORD = os.environ["ARCHWEB_PASSWORD"]
+
+try:
+    USERNAME = os.environ.get("ARCHWEB_USER", CONFIG["User"]["Username"])
+except KeyError:
+    sys.exit("No username")
+
+try:
+    PASSWORD = os.environ.get("ARCHWEB_PASSWORD", CONFIG["User"]["Password"])
+except KeyError:
+    sys.exit("No password")
 
 
 class Session:
     def __init__(self):
         self.url = "https://www.archlinux.org/login/"
         self.client = requests.session()
-        cj = http.cookiejar.LWPCookieJar(CACHE+"/cookies")
+        cj = http.cookiejar.LWPCookieJar(CACHE_DIR+"/archweb/cookies")
         try:
             cj.load(ignore_discard=True)
         except:

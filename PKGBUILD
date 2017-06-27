@@ -1,8 +1,30 @@
 # Maintainer: Morten Linderud <morten@linderud.pw>
+#                             ___                                  
+#                           .'   '.                                
+#                          /       \           oOoOo               
+#                         |         |       ,==|||||               
+#                          \       /       _|| |||||               
+#                           '.___.'    _.-'^|| |||||               
+#                         __/_______.-'     '==HHHHH               
+#                    _.-'` /                   """""               
+#                 .-'     /   oOoOo                                
+#                 `-._   / ,==|||||                                
+#                     '-/._|| |||||                                
+#                      /  ^|| |||||                                
+#                     /    '==HHHHH                                
+#                    /________"""""                                
+#                    `\       `\                                   
+#                      \        `\   /                             
+#                       \         `\/                              
+#                       /                                          
+#                      /                                           
+#                     /_____                                       
+#                                                                  
+
 
 pkgname=signoff-git
-_pkgname=signoff
-pkgver=r12.ba5c048
+_pkgname=archweb-signoff-helper
+pkgver=r3.e69dd7c
 pkgrel=1
 pkgdesc="Detects packages installed from testing and reports the ones you haven't signed off"
 arch=("any")
@@ -13,13 +35,14 @@ source=("git+https://github.com/Foxboron/archweb-signoff-helper.git")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd "$_pkgname"
+  cd "${_pkgname}"
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 package() {
-  install -Dm755 "$srcdir/$_pkgname/signoff.py" "$pkgdir/usr/bin/signoff"
-  install -Dm644 "$srcdir/$_pkgname/archweb.conf" "$pkgdir/usr/share/signoff/archweb.conf"
-  install -Dm644 "$srcdir/$_pkgname/LICENSE" "$pkgdir/usr/share/licenses/signoff/LICENSE"
+  install -Dm755 "${srcdir}/${_pkgname}/signoff.py" "${pkgdir}/usr/bin/signoff"
+  install -Dm644 "${srcdir}/${_pkgname}/archweb.conf" "${pkgdir}/usr/share/signoff/archweb.conf"
+  install -Dm644 "${srcdir}/${_pkgname}/LICENSE" "${pkgdir}/usr/share/licenses/signoff/LICENSE"
+
 }
 
