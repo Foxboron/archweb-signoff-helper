@@ -18,8 +18,8 @@ USERNAME = None
 PASSWORD = None
 CONFIG = configparser.ConfigParser()
 
-if not os.path.isdir(CACHE_DIR):
-    os.mkdir(CACHE_DIR)
+if not os.path.isdir(CACHE_DIR+"/archweb"):
+    os.mkdir(CACHE_DIR+"/archweb")
 if not os.path.isfile(CACHE_DIR+"/archweb/cookies"):
     open(CACHE_DIR+"/archweb/cookies", "a")
 

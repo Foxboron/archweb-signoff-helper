@@ -30,7 +30,7 @@ pkgdesc="Detects packages installed from testing and reports the ones you haven'
 arch=("any")
 url="https://github.com/Foxboron/archweb-signoff-helper"
 license=('MIT')
-depends=('python-requests' 'python-lxml')
+depends=('python-requests' 'python-lxml' 'expac')
 source=("git+https://github.com/Foxboron/archweb-signoff-helper.git")
 sha256sums=('SKIP')
 
