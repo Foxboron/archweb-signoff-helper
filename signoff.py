@@ -20,15 +20,9 @@ USERNAME = None
 PASSWORD = None
 CONFIG = configparser.ConfigParser()
 
-
-if not os.path.isdir(CACHE_DIR):
-    os.mkdir(CACHE_DIR)
-if not os.path.isfile(CACHE_DIR+"/cookies"):
-    open(CACHE_DIR+"/cookies", "a")
-if not os.path.isfile(CACHE_DIR+"/signoff-content-length"):
-    open(CACHE_DIR+"/signoff-content-length", "a")
-if not os.path.isfile(CACHE_DIR+"/packages.json"):
-    open(CACHE_DIR+"/packages.json", "a")
+os.makedirs(CACHE_DIR, exist_ok=True)
+for paths in ["/cookies", "/signoff-content-length", "/packages.json"]:
+    open(CACHE_DIR+paths, "a")
 
 if os.path.isfile(CONFIG_DIR+"/archweb.conf"):
     CONFIG.read(CONFIG_DIR+"/archweb.conf")
