@@ -141,48 +141,31 @@ class Session:
 SESSION = Session()
 
 
-def approvals(args):
+def approvals(pkg):
+    fmt = "{name} :: {version} -> {approved}"
+    print(fmt.format(**pkg))
+
+
+def signoffs(pkg):
+    fmt = "{name} :: {version} -> {signoffs}"
+    pkg["signoffs"] = ",".join(pkg["signoffs"])
+    print(fmt.format(**pkg))
+
+
+def note(pkg):
+    fmt = "{name} -> {note}"
+    print(fmt.format(**pkg))
+
+
+def args_func(args):
     pkgs = SESSION.get_packages()
     if args.package:
         for pkg in pkgs:
             if pkg["name"] == args.package:
-                fmt = "{name} :: {version} -> {approved}"
-                return print(fmt.format(**pkg))
-        print("Package is not inn testing :)")
-    else:
-        for pkg in pkgs:
-            fmt = "{name} :: {version} -> {approved}"
-            print(fmt.format(**pkg))
-
-
-def signoffs(args):
-    pkgs = SESSION.get_packages()
-    if args.package:
-        for pkg in pkgs:
-            if pkg["name"] == args.package:
-                fmt = "{name} :: {version} -> {signoffs}"
-                pkg["signoffs"] = ",".join(pkg["signoffs"])
-                return print(fmt.format(**pkg))
-        print("Package is not inn testing :)")
-    else:
-        for pkg in pkgs:
-            fmt = "{name} :: {version} -> {signoffs}"
-            pkg["signoffs"] = ", ".join(pkg["signoffs"])
-            print(fmt.format(**pkg))
-
-
-def note(args):
-    pkgs = SESSION.get_packages()
-    if args.package:
-        for pkg in pkgs:
-            if pkg["name"] == args.package:
-                fmt = "{name} -> {note}"
-                return print(fmt.format(**pkg))
-        print("Package is not inn testing :)")
-    else:
-        for pkg in pkgs:
-            fmt = "{name} -> {note}"
-            print(fmt.format(**pkg))
+                return args.func(pkg)
+        return print("Package is not inn testing :)")
+    for pkg in pkgs:
+        args.func(pkg)
 
 
 def approve(args):
@@ -247,4 +230,4 @@ if __name__ == "__main__":
     sub_signoffs.set_defaults(func=signoffs)
 
     args = parser.parse_args(sys.argv[1:])
-    args.func(args)
+    args_func(args)
