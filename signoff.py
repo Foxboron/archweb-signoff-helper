@@ -152,7 +152,7 @@ def approvals(pkg):
 
 def signoffs(pkg):
     fmt = "{name} :: {version} -> {signoffs}"
-    pkg["signoffs"] = ",".join(pkg["signoffs"])
+    pkg["signoffs"] = ", ".join(pkg["signoffs"])
     print(fmt.format(**pkg))
 
 
