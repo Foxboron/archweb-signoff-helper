@@ -234,4 +234,7 @@ if __name__ == "__main__":
     sub_signoffs.set_defaults(func=signoffs)
 
     args = parser.parse_args(sys.argv[1:])
-    args_func(args)
+    if len(sys.argv) == 1:
+        main(args)
+    else:
+        args_func(args)
