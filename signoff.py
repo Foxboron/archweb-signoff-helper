@@ -27,8 +27,7 @@ for paths in ["/cookies", "/signoff-content-length", "/packages.json"]:
 if os.path.isfile(CONFIG_DIR+"/archweb.conf"):
     CONFIG.read(CONFIG_DIR+"/archweb.conf")
 else:
-    print("Missing config file")
-    sys.exit()
+    sys.exit("Missing config file")
 
 try:
     USERNAME = os.environ.get("ARCHWEB_USER", CONFIG["User"]["Username"])
