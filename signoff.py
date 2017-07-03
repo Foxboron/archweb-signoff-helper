@@ -102,9 +102,7 @@ class Session:
         for i in rules:
             completed_rules.extend(root.xpath(i))
 
-        packages = []
-        for i in completed_rules:
-            packages.append(parse_package(i))
+        packages = [parse_package(i) for i in completed_rules]
 
         with open(CACHE_DIR+"/packages.json", "r+") as f:
                 f.seek(0)
