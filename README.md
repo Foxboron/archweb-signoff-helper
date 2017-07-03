@@ -5,6 +5,23 @@ This script lists packages installed from `[testing]` that you havent signed off
 details either from the config file, or from the env variables `ARCHWEB_USER` or `ARCHWEB_PASSWORD`
 
 
+Usage:
+```
+usage: signoff [-h] <command> ...
+
+signoff - Archweb signoff helper
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+subcommands:
+  <command>
+    note      list package notes
+    approvals
+              list package approvals
+    signoffs  list package signoffs
+```
+
 
 `~/.config/archweb/archweb.conf`
 ```

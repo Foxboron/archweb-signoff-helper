@@ -1,0 +1,45 @@
+signoff
+qt5-base :: v1.1 :: {{ date }} :: {{ note }}
+
+signoff approved {{ pkg }}
+qt5-base :: v1.1 -> {Yes,No}
+
+
+signoff signoffs {{ pkg }}
+qt5-base :: v1.1 -> User1, User2
+
+signoff note {{ pkg }}
+qt5-base -> {{ note }}
+
+
+signoff approve {{ pkg }}
+Sign off on {{ version }}? [y/N]: X 
+Signed off on  {{ pkg }} version {{ version }}
+
+signoff revoke {{ pkg }}
+Revoked signoff on {{ pkg }] version {{ version }}
+
+
+Flags:
+-s Skip formatting / only print essential info
+
+
+<tr class="odd x86_64 multilib">
+    <td><a href="/packages/multilib-testing/x86_64/lib32-glibc/" title="View package details for lib32-glibc">lib32-glibc</a> 2.25-5.1</td>
+    <td>x86_64</td>
+    <td>Multilib</td>
+    <td>heftig</td>
+    <td>1</td>
+    <td class="epoch-1498048428">2017-06-21</td>
+    <td class="approval signoff-yes">Yes</td>
+    <td>
+        <ul class="signoff-list">
+            <li class="signed-username" title="Signed off by phillid">phillid</li>
+            <li class="signed-username" title="Signed off by polyzen">polyzen</li>
+        </ul>
+        <div>
+            <a class="signoff-link" href="/packages/multilib-testing/x86_64/lib32-glibc/signoff/"
+                                    title="Signoff lib32-glibc for x86_64">Signoff</a></div>
+    </td>
+    <td class="wrap note">2.25-5.1</td>
+</tr>
