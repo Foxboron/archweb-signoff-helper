@@ -94,15 +94,7 @@ class Session:
             sys.exit()
         self.client.cookies.save()
 
-    def get_signoff_page(self):
-        r = self.client.get(self.signoff_page)
-        if r.url != self.signoff_page:
-            self._login()
-            return self.get_signoffs()
-        return r.text
-
-    def parse_packages(self):
-        body = self.get_signoff_page()
+    def parse_packages(self, body):
         rules = get_xpath_rules()
         root = etree.HTML(body)
 
@@ -123,15 +115,29 @@ class Session:
     def get_packages_from_cache(self):
         return json.load(open(CACHE_DIR+"/packages.json"))
 
-    def get_packages(self):
-        r = self.client.head(self.signoff_page)
+    def get_packages(self, tries=0):
+        r = 0
+        for i in range(2):
+            r = self.client.head(self.signoff_page)
+            if r.headers['content-length'] == "0":
+                self._login()
+                continue
+            break
+        else:
+            sys.exit("Could not login")
+
+        # Check content-length before request the whole webpage
+        # If its the same lenth, we assume same content and load
+        # packages from cache
+        # Hopefully this decreases load...
         with open(CACHE_DIR+"/signoff-content-length", "r+") as f:
             length = f.readline()
             if length != str(r.headers['content-length']):
                 f.seek(0)
                 f.write(r.headers['content-length'])
                 f.truncate()
-                return self.parse_packages()
+                r = self.client.get(self.signoff_page)
+                return self.parse_packages(r.text)
         try:
             return self.get_packages_from_cache()
         except json.JSONDecodeError:
