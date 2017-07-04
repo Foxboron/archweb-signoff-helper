@@ -1,7 +1,7 @@
 archweb-signoff-helper
 ======================
 
-This script lists packages installed from `[testing]` that you havent signed off inn the interface. It handles login
+This script lists packages installed from `[testing]` that you haven't signed off in the interface. It handles login
 details either from the config file, or from the env variables `ARCHWEB_USER` or `ARCHWEB_PASSWORD`
 
 
