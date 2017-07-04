@@ -202,7 +202,7 @@ def get_installed_packages():
              xargs expac '%e %n' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
-    return [i for i in subprocess.getoutput(cmd).split("\n")]
+    return subprocess.getoutput(cmd).split("\n")
 
 def approve(pkg):
     packages = SESSION.get_packages()
