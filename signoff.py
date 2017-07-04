@@ -110,13 +110,26 @@ class Session:
                 f.truncate()
         return packages
 
+    def signoff(self, package):
+        url = "https://www.archlinux.org/packages/testing/{arch}/{name}/signoff/"
+        r = self.client.get(url.format(**package))
+        return r.status_code == 200
+
+    def revoke(self, package):
+        url = "https://www.archlinux.org/packages/testing/{arch}/{name}/signoff/revoke/"
+        r = self.client.get(url.format(**package))
+        return r.status_code == 200
+
     def get_packages_from_cache(self):
         return json.load(open(CACHE_DIR+"/packages.json"))
 
     def get_packages(self, tries=0):
         r = 0
         for i in range(2):
-            r = self.client.head(self.signoff_page)
+            try:
+                r = self.client.head(self.signoff_page)
+            except:
+                sys.exit("Connection error")
             if r.headers['content-length'] == "0":
                 self._login()
                 continue
@@ -134,19 +147,29 @@ class Session:
                 f.seek(0)
                 f.write(r.headers['content-length'])
                 f.truncate()
-                r = self.client.get(self.signoff_page)
+                try:
+                    r = self.client.get(self.signoff_page)
+                except:
+                    sys.exit("Connection error")
                 return self.parse_packages(r.text)
         try:
             return self.get_packages_from_cache()
         except json.JSONDecodeError:
-            return self.parse_packages()
+            try:
+                r = self.client.get(self.signoff_page)
+            except:
+                sys.exit("Connection error")
+            return self.parse_packages(r.text)
 
 
 SESSION = Session()
 
 
 def approvals(args, pkg):
+    print(args.filter)
     if args.filter and args.filter != pkg["approved"]:
+        return
+    if args.user and args.user not in pkg["signoffs"]:
         return
     fmt = "{name} :: {version} -> {approved}"
     print(fmt.format(**pkg))
@@ -168,29 +191,64 @@ def args_func(args):
     if args.package:
         for pkg in pkgs:
             if pkg["name"] == args.package:
-                return args.func(args, pkg)
+                return args.format(args, pkg)
         return print("Package is not inn testing :)")
     for pkg in pkgs:
-        args.func(args, pkg)
+        args.format(args, pkg)
 
 
-def approve(args):
-    pass
-
-
-def revoke():
-    pass
-
-
-def main(args):
-    packages = SESSION.get_packages()
-
+def get_installed_packages():
     cmd = """pacman -Sl testing |
              awk '/\[installed\]$/ { print $2 }' |
              xargs expac '%e %n' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
-    installed_packages = [i for i in subprocess.getoutput(cmd).split("\n")]
+    return [i for i in subprocess.getoutput(cmd).split("\n")]
+
+def approve(pkg):
+    packages = SESSION.get_packages()
+    installed_packages = get_installed_packages()
+    for pkg in packages:
+        if pkg["name"] != args.package:
+            continue
+        if pkg["name"] not in installed_packages:
+            continue
+        if USERNAME in pkg["signoffs"]:
+            print("Allready signed off on this package!")
+            continue
+        fmt = "Sign off on {name} {version}? [y/N]: "
+        inn = input(fmt.format(**pkg)).lower()
+        if inn == "y":
+            SESSION.signoff(pkg)
+            print("Signed off")
+        else:
+            return print("Nothing singed off")
+
+
+def revoke(args):
+    packages = SESSION.get_packages()
+    installed_packages = get_installed_packages()
+    for pkg in packages:
+        if pkg["name"] != args.package:
+            continue
+        if pkg["name"] not in installed_packages:
+            continue
+        if USERNAME not in pkg["signoffs"]:
+            print("You haven't signed off on this package!")
+            continue
+        fmt = "Revoke sign off on {name} {version}? [y/N]: "
+        inn = input(fmt.format(**pkg)).lower()
+        if inn == "y":
+            SESSION.revoke(pkg)
+            print("Revoked sign off")
+        else:
+            return print("Nothing revoked")
+
+
+def main(args):
+    packages = SESSION.get_packages()
+    installed_packages = get_installed_packages()
+
     for pkg in packages:
         if pkg["name"] not in installed_packages:
             continue
@@ -215,7 +273,7 @@ if __name__ == "__main__":
                           nargs="?",
                           default="",
                           help="Package from testing")
-    sub_note.set_defaults(func=note)
+    sub_note.set_defaults(format=note)
 
     sub_approve = subparsers.add_parser('approvals',
                                         description=approvals.__doc__,
@@ -229,7 +287,10 @@ if __name__ == "__main__":
                              type=lambda f: f if f in ["Yes", "No"]
                                      else sys.exit("Invalid filter value"),
                              help="Filter approval status")
-    sub_approve.set_defaults(func=approvals)
+    sub_approve.add_argument("-u", dest="user",
+                             metavar="USER",
+                             help="User that has signed off")
+    sub_approve.set_defaults(format=approvals)
 
     sub_signoffs = subparsers.add_parser('signoffs',
                                          description=signoffs.__doc__,
@@ -238,10 +299,30 @@ if __name__ == "__main__":
                               nargs="?",
                               default="",
                               help="Package from testing")
-    sub_signoffs.set_defaults(func=signoffs)
+    sub_signoffs.set_defaults(format=signoffs)
+
+    sub_approve = subparsers.add_parser('approve',
+                                         description=approve.__doc__,
+                                         help='signoff package inn testing')
+    sub_approve.add_argument("package", metavar="pkg",
+                              nargs="?",
+                              default="",
+                              help="Package from testing")
+    sub_approve.set_defaults(func=approve, format=None)
+
+    sub_revoke = subparsers.add_parser('revoke',
+                                         description=revoke.__doc__,
+                                         help='revoke package signoff')
+    sub_revoke.add_argument("package", metavar="pkg",
+                              nargs="?",
+                              default="",
+                              help="Package from testing")
+    sub_revoke.set_defaults(func=revoke, format=None)
 
     args = parser.parse_args(sys.argv[1:])
     if len(sys.argv) == 1:
         main(args)
-    else:
+    elif args.format:
         args_func(args)
+    else:
+        args.func(args)
