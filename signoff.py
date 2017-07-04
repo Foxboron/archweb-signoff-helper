@@ -195,14 +195,18 @@ def args_func(args):
     for pkg in pkgs:
         args.format(args, pkg)
 
-
+_installed_packages = None
 def get_installed_packages():
+    global _installed_packages
+    if _installed_packages is not None:
+        return _installed_packages
     cmd = """pacman -Sl testing |
              awk '/\[installed\]$/ { print $2 }' |
              xargs expac '%e %n' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
-    return subprocess.getoutput(cmd).split("\n")
+    _installed_packages = subprocess.getoutput(cmd).split("\n")
+    return _installed_packages
 
 def approve(pkg):
     packages = SESSION.get_packages()
