@@ -145,18 +145,20 @@ class Session:
 SESSION = Session()
 
 
-def approvals(pkg):
+def approvals(args, pkg):
+    if args.filter and args.filter != pkg["approved"]:
+        return
     fmt = "{name} :: {version} -> {approved}"
     print(fmt.format(**pkg))
 
 
-def signoffs(pkg):
+def signoffs(args, pkg):
     fmt = "{name} :: {version} -> {signoffs}"
     pkg["signoffs"] = ", ".join(pkg["signoffs"])
     print(fmt.format(**pkg))
 
 
-def note(pkg):
+def note(args, pkg):
     fmt = "{name} -> {note}"
     print(fmt.format(**pkg))
 
@@ -166,10 +168,10 @@ def args_func(args):
     if args.package:
         for pkg in pkgs:
             if pkg["name"] == args.package:
-                return args.func(pkg)
+                return args.func(args, pkg)
         return print("Package is not inn testing :)")
     for pkg in pkgs:
-        args.func(pkg)
+        args.func(args, pkg)
 
 
 def approve(args):
@@ -222,6 +224,11 @@ if __name__ == "__main__":
                              nargs="?",
                              default="",
                              help="Package from testing")
+    sub_approve.add_argument("-f", dest="filter",
+                             metavar="{Yes, No}",
+                             type=lambda f: f if f in ["Yes", "No"]
+                                     else sys.exit("Invalid filter value"),
+                             help="Filter approval status")
     sub_approve.set_defaults(func=approvals)
 
     sub_signoffs = subparsers.add_parser('signoffs',
