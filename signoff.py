@@ -6,10 +6,8 @@ import argparse
 import subprocess
 import configparser
 from http import cookiejar
-from itertools import product
 
 import requests
-from lxml import etree
 
 
 HOME = os.path.expanduser("~")
@@ -40,36 +38,10 @@ except KeyError:
     sys.exit("No password")
 
 
-def get_xpath_rules():
-    xpath = ".//tr[contains(@class, '{}') and contains(@class, '{}')]"
-    repos = CONFIG["Repositories"].items()
-    archs = CONFIG["Architectures"].items()
-    return [xpath.format(r[0], a[0]) for r, a in product(repos, archs)]
-
-
-def parse_signoff(elm):
-    return [i.text for i in elm.xpath(".//li[@class='signed-username']")]
-
-
-def parse_package(elm):
-    tds = elm.xpath(".//td")
-    package = {"name": elm.xpath(".//a")[0].text,
-               "version": tds[0].xpath("text()")[0].strip(),
-               "arch": tds[1].text,
-               "repo": tds[2].text,
-               "packager": tds[3].text,
-               "required_signoffs": tds[4].text,
-               "date": tds[5].text,
-               "approved": tds[6].text,
-               "signoffs": parse_signoff(tds[7]),
-               "note": tds[8].text.strip()}
-    return package
-
-
 class Session:
     def __init__(self):
         self.url = "https://www.archlinux.org/login/"
-        self.signoff_page = "https://www.archlinux.org/packages/signoffs/"
+        self.signoff_page = "https://www.archlinux.org/packages/signoffs/json/"
         self.client = requests.session()
         self.client.headers.update({"Accept-Encoding": ""})
         cj = cookiejar.LWPCookieJar(CACHE_DIR+"/cookies")
@@ -94,16 +66,15 @@ class Session:
             sys.exit("Login failed")
         self.client.cookies.save()
 
-    def parse_packages(self, body):
-        rules = get_xpath_rules()
-        root = etree.HTML(body)
-
-        completed_rules = []
-        for i in rules:
-            completed_rules.extend(root.xpath(i))
-
-        packages = [parse_package(i) for i in completed_rules]
-
+    def recache_packages(self, packages):
+        for pkg in packages[:]:
+            if pkg['signoffs']:
+                pkg['short_signoffs'] = [i['user']+' (revoked)' if i['revoked'] else i['user'] for i in pkg['signoffs']]
+            else:
+                pkg['short_signoffs'] = []
+            pkg['repo'] = pkg['repo'].lower()
+            if not (pkg['arch'] in CONFIG["Architectures"] and pkg['target_repo'].lower() in CONFIG["Repositories"]):
+                packages.remove(pkg)
         with open(CACHE_DIR+"/packages.json", "r+") as f:
                 f.seek(0)
                 f.write(json.dumps(packages))
@@ -111,12 +82,12 @@ class Session:
         return packages
 
     def signoff(self, package):
-        url = "https://www.archlinux.org/packages/testing/{arch}/{name}/signoff/"
+        url = "https://www.archlinux.org/packages/{repo}/{arch}/{pkgbase}/signoff/"
         r = self.client.get(url.format(**package))
         return r.status_code == 200
 
     def revoke(self, package):
-        url = "https://www.archlinux.org/packages/testing/{arch}/{name}/signoff/revoke/"
+        url = "https://www.archlinux.org/packages/{repo}/{arch}/{pkgbase}/signoff/revoke/"
         r = self.client.get(url.format(**package))
         return r.status_code == 200
 
@@ -151,7 +122,7 @@ class Session:
                     r = self.client.get(self.signoff_page)
                 except:
                     sys.exit("Connection error")
-                return self.parse_packages(r.text)
+                return self.recache_packages(r.json()['signoff_groups'])
         try:
             return self.get_packages_from_cache()
         except json.JSONDecodeError:
@@ -159,7 +130,7 @@ class Session:
                 r = self.client.get(self.signoff_page)
             except:
                 sys.exit("Connection error")
-            return self.parse_packages(r.text)
+            return self.recache_packages(r.json()['signoff_groups'])
 
 
 SESSION = Session()
@@ -168,20 +139,20 @@ SESSION = Session()
 def approvals(args, pkg):
     if args.filter and args.filter != pkg["approved"]:
         return
-    if args.user and args.user not in pkg["signoffs"]:
+    if args.user and args.user not in pkg["short_signoffs"]:
         return
-    fmt = "{name} :: {version} -> {approved}"
+    fmt = "{pkgbase} :: {version} -> {approved}"
     print(fmt.format(**pkg))
 
 
 def signoffs(args, pkg):
-    fmt = "{name} :: {version} -> {signoffs}"
-    pkg["signoffs"] = ", ".join(pkg["signoffs"])
+    fmt = "{pkgbase} :: {version} -> {short_signoffs}"
+    pkg["short_signoffs"] = ", ".join(pkg["short_signoffs"])
     print(fmt.format(**pkg))
 
 
 def note(args, pkg):
-    fmt = "{name} -> {note}"
+    fmt = "{pkgbase} -> {comments}"
     print(fmt.format(**pkg))
 
 
@@ -189,7 +160,7 @@ def args_func(args):
     pkgs = SESSION.get_packages()
     if args.package:
         for pkg in pkgs:
-            if pkg["name"] == args.package:
+            if pkg["pkgbase"] == args.package:
                 return args.format(args, pkg)
         return print("Package is not inn testing :)")
     for pkg in pkgs:
@@ -208,18 +179,19 @@ def get_installed_packages():
     _installed_packages = subprocess.getoutput(cmd).split("\n")
     return _installed_packages
 
+
 def approve(pkg):
     packages = SESSION.get_packages()
     installed_packages = get_installed_packages()
     for pkg in packages:
-        if pkg["name"] != args.package:
+        if pkg["pkgbase"] != args.package:
             continue
-        if pkg["name"] not in installed_packages:
+        if pkg["pkgbase"] not in installed_packages:
             continue
-        if USERNAME in pkg["signoffs"]:
+        if USERNAME in pkg["short_signoffs"]:
             print("Allready signed off on this package!")
             continue
-        fmt = "Sign off on {name} {version}? [y/N]: "
+        fmt = "Sign off on {pkgbase} {version}? [y/N]: "
         inn = input(fmt.format(**pkg)).lower()
         if inn == "y":
             SESSION.signoff(pkg)
@@ -232,14 +204,14 @@ def revoke(args):
     packages = SESSION.get_packages()
     installed_packages = get_installed_packages()
     for pkg in packages:
-        if pkg["name"] != args.package:
+        if pkg["pkgbase"] != args.package:
             continue
-        if pkg["name"] not in installed_packages:
+        if pkg["pkgbase"] not in installed_packages:
             continue
-        if USERNAME not in pkg["signoffs"]:
+        if USERNAME not in pkg["short_signoffs"]:
             print("You haven't signed off on this package!")
             continue
-        fmt = "Revoke sign off on {name} {version}? [y/N]: "
+        fmt = "Revoke sign off on {pkgbase} {version}? [y/N]: "
         inn = input(fmt.format(**pkg)).lower()
         if inn == "y":
             SESSION.revoke(pkg)
@@ -253,11 +225,11 @@ def main(args):
     installed_packages = get_installed_packages()
 
     for pkg in packages:
-        if pkg["name"] not in installed_packages:
+        if pkg["pkgbase"] not in installed_packages:
             continue
         if USERNAME in pkg["signoffs"]:
             continue
-        fmt = "{name} :: {version} :: {date} :: {note}"
+        fmt = "{pkgbase} :: {version} :: {last_update} :: {comments}"
         print(fmt.format(**pkg))
 
 
