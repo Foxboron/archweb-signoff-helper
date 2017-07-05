@@ -227,7 +227,7 @@ def main(args):
     for pkg in packages:
         if pkg["pkgbase"] not in installed_packages:
             continue
-        if USERNAME in pkg["signoffs"]:
+        if USERNAME in pkg["short_signoffs"]:
             continue
         fmt = "{pkgbase} :: {version} :: {last_update} :: {comments}"
         pkg["comments"] = pkg["comments"].split("\n")[0]
