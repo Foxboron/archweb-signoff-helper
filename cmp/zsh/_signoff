@@ -4,7 +4,7 @@ local _signoff_users
 _load_users(){
     _signoff_users=()
     cache="${XDG_CACHE_HOME:-$HOME/.cache}"
-    _users=$(jq -r 'map(.signoffs) | flatten | unique_by(split(" (")[0]) | join("\n")' $cache/archweb/packages.json)
+    _users=$(jq -r 'map(.short_signoffs) | flatten | unique_by(split(" (")[0]) | join("\n")' $cache/archweb/packages.json)
     _signoff_users=("${(@f)$(echo $_users)}")
 }
 
@@ -12,7 +12,7 @@ local _signoff_packages
 _load_all_packages(){
     _signoff_packages=()
     cache="${XDG_CACHE_HOME:-$HOME/.cache}"
-    _packages=$(jq -r 'map(.name) | join("\n")' $cache/archweb/packages.json)
+    _packages=$(jq -r 'map(.pkgbase) | join("\n")' $cache/archweb/packages.json)
     _signoff_packages=("${(@f)$(echo $_packages)}")
 }
 
@@ -21,7 +21,7 @@ _load_your_signoff_packages(){
     cache="${XDG_CACHE_HOME:-$HOME/.cache}"
     config="${XDG_CONFIG_HOME:-$HOME/.config}"
     username="${ARCHWEB_USER:-$(cat $config/archweb/archweb.conf | awk -F'[/=]' '/Username/{ printf $2 }')}"
-    _packages=$(jq -r --arg username $username '.[] | select(.signoffs|contains([$username])) | .name' $cache/archweb/packages.json)
+    _packages=$(jq -r --arg username $username '.[] | select(.short_signoffs|contains([$username])) | .pkgbase' $cache/archweb/packages.json)
     _signoff_packages=("${(@f)$(echo $_packages)}")
 }
 
@@ -30,7 +30,7 @@ _load_no_signoff_packages(){
     cache="${XDG_CACHE_HOME:-$HOME/.cache}"
     config="${XDG_CONFIG_HOME:-$HOME/.config}"
     username="${ARCHWEB_USER:-$(cat $config/archweb/archweb.conf | awk -F'[/=]' '/Username/{ printf $2 }')}"
-    _packages=$(jq -r --arg username $username '.[] | select(.signoffs|contains([$username])|not) | .name' $cache/archweb/packages.json)
+    _packages=$(jq -r --arg username $username '.[] | select(.short_signoffs|contains([$username])|not) | .pkgbase' $cache/archweb/packages.json)
     _signoff_packages=("${(@f)$(echo $_packages)}")
 }
 
