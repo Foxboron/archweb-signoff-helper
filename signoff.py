@@ -71,6 +71,7 @@ class Session:
         self.url = "https://www.archlinux.org/login/"
         self.signoff_page = "https://www.archlinux.org/packages/signoffs/"
         self.client = requests.session()
+        self.client.headers.update({"Accept-Encoding": ""})
         cj = cookiejar.LWPCookieJar(CACHE_DIR+"/cookies")
         try:
             cj.load(ignore_discard=True)
@@ -90,8 +91,7 @@ class Session:
                                 "referer": "https://www.archlinux.org/login",
                                 "origin": "https://www.archlinux.org"})
         if r.status_code != 200:
-            print("Login failed")
-            sys.exit()
+            sys.exit("Login failed")
         self.client.cookies.save()
 
     def parse_packages(self, body):
@@ -166,7 +166,6 @@ SESSION = Session()
 
 
 def approvals(args, pkg):
-    print(args.filter)
     if args.filter and args.filter != pkg["approved"]:
         return
     if args.user and args.user not in pkg["signoffs"]:
@@ -266,6 +265,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(title="subcommands",
                                        metavar='<command>')
 
+    # Note
     sub_note = subparsers.add_parser('note',
                                      description=note.__doc__,
                                      help='list package notes')
@@ -275,23 +275,26 @@ if __name__ == "__main__":
                           help="Package from testing")
     sub_note.set_defaults(format=note)
 
-    sub_approve = subparsers.add_parser('approvals',
+    # Approvals
+    sub_approvals = subparsers.add_parser('approvals',
                                         description=approvals.__doc__,
                                         help='list package approvals')
-    sub_approve.add_argument("package", metavar="pkg",
+    sub_approvals.add_argument("package", metavar="pkg",
                              nargs="?",
                              default="",
                              help="Package from testing")
-    sub_approve.add_argument("-f", dest="filter",
+    sub_approvals.add_argument("-f", dest="filter",
                              metavar="{Yes, No}",
                              type=lambda f: f if f in ["Yes", "No"]
                                      else sys.exit("Invalid filter value"),
                              help="Filter approval status")
-    sub_approve.add_argument("-u", dest="user",
+    sub_approvals.add_argument("-u", dest="user",
                              metavar="USER",
                              help="User that has signed off")
-    sub_approve.set_defaults(format=approvals)
+    sub_approvals.set_defaults(format=approvals)
 
+
+    # Signoffs
     sub_signoffs = subparsers.add_parser('signoffs',
                                          description=signoffs.__doc__,
                                          help='list package signoffs')
@@ -301,6 +304,7 @@ if __name__ == "__main__":
                               help="Package from testing")
     sub_signoffs.set_defaults(format=signoffs)
 
+    # Approve
     sub_approve = subparsers.add_parser('approve',
                                          description=approve.__doc__,
                                          help='signoff package inn testing')
@@ -310,6 +314,7 @@ if __name__ == "__main__":
                               help="Package from testing")
     sub_approve.set_defaults(func=approve, format=None)
 
+    # Revoke
     sub_revoke = subparsers.add_parser('revoke',
                                          description=revoke.__doc__,
                                          help='revoke package signoff')

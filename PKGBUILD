@@ -24,7 +24,7 @@
 
 pkgname=signoff-git
 _pkgname=archweb-signoff-helper
-pkgver=r19.720dec6
+pkgver=r20.a2416f0
 pkgrel=1
 pkgdesc="Detects packages installed from testing and reports the ones you haven't signed off"
 arch=("any")
