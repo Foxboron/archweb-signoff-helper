@@ -261,8 +261,7 @@ if __name__ == "__main__":
                              help="Package from testing")
     sub_approvals.add_argument("-f", dest="filter",
                              metavar="{Yes, No}",
-                             type=lambda f: f if f in ["Yes", "No"]
-                                     else sys.exit("Invalid filter value"),
+                             choices=["Yes", "No"],
                              help="Filter approval status")
     sub_approvals.add_argument("-u", dest="user",
                              metavar="USER",
