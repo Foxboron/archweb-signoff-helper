@@ -162,7 +162,7 @@ def args_func(args):
         for pkg in pkgs:
             if pkg["pkgbase"] == args.package:
                 return args.format(args, pkg)
-        return print("Package is not inn testing :)")
+        return print("Package is not in testing :)")
     for pkg in pkgs:
         args.format(args, pkg)
 
@@ -191,13 +191,13 @@ def approve(pkg):
         if USERNAME in pkg["short_signoffs"]:
             print("Allready signed off on this package!")
             continue
-        fmt = "Sign off on {pkgbase} {version}? [y/N]: "
+        fmt = "Signoff on {pkgbase} {version}? [y/N]: "
         inn = input(fmt.format(**pkg)).lower()
         if inn == "y":
             SESSION.signoff(pkg)
             print("Signed off")
         else:
-            return print("Nothing singed off")
+            return print("Nothing signed off")
 
 
 def revoke(args):
@@ -211,11 +211,11 @@ def revoke(args):
         if USERNAME not in pkg["short_signoffs"]:
             print("You haven't signed off on this package!")
             continue
-        fmt = "Revoke sign off on {pkgbase} {version}? [y/N]: "
+        fmt = "Revoke signoff on {pkgbase} {version}? [y/N]: "
         inn = input(fmt.format(**pkg)).lower()
         if inn == "y":
             SESSION.revoke(pkg)
-            print("Revoked sign off")
+            print("Revoked signoff")
         else:
             return print("Nothing revoked")
 
