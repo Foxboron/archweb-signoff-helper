@@ -171,9 +171,8 @@ def get_installed_packages():
     global _installed_packages
     if _installed_packages is not None:
         return _installed_packages
-    cmd = """pacman -Sl testing |
+    cmd = """pacman -Sl testing community-testing |
              awk '/\[installed\]$/ { print $2 }' |
-             xargs expac '%e %n' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
     _installed_packages = subprocess.getoutput(cmd).split("\n")
@@ -230,6 +229,7 @@ def main(args):
         if USERNAME in pkg["signoffs"]:
             continue
         fmt = "{pkgbase} :: {version} :: {last_update} :: {comments}"
+        pkg["comments"] = pkg["comments"].split("\n")[0]
         print(fmt.format(**pkg))
 
 
