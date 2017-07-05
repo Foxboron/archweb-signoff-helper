@@ -62,7 +62,6 @@ _signoff() {
     '-f[Yes,No]:flag:->filter_flag'\
     '-u[user]:flag:->user_filter'\
     '*::arguments:->action-arguments'
-  echo $state
   case $state in
     actions)
       _describe action _signoff_actions
