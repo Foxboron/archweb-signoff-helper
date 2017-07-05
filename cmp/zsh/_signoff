@@ -35,8 +35,8 @@ _load_no_signoff_packages(){
 }
 
 _signoff_filter_opts=(
-    '-u[user]'
-    '-f[Yes,No]'
+    '-f[Yes,No]:flag:->filter_flag'
+    '-u[user]:flag:->user_filter'
 )
 
 _signoff_actions=(
@@ -48,8 +48,8 @@ _signoff_actions=(
 )
 
 _signoff_filter_yes_no=(
-    'No'
     'Yes'
+    'No'
 )
 
 # main dispatcher
@@ -59,9 +59,10 @@ _signoff() {
 
   _arguments \
     ':action:->actions' \
+    '*::arguments:->action-arguments'\
     '-f[Yes,No]:flag:->filter_flag'\
-    '-u[user]:flag:->user_filter'\
-    '*::arguments:->action-arguments'
+    '-u[user]:flag:->user_filter'
+
   case $state in
     actions)
       _describe action _signoff_actions
@@ -75,18 +76,19 @@ _signoff() {
     ;;
     action-arguments)
       case ${words[1]} in
-        approvals) _arguments -s -w : \
+        approvals) _arguments : \
                 "$_signoff_filter_opts[@]" ;;
-        note) _load_packages
+        note) _load_all_packages
               _describe action _signoff_packages ;;
-        signoffs) _load_packages
+        signoffs) _load_all_packages
                   _describe action _signoff_packages ;;
         approve) _load_no_signoff_packages
                  _describe action _signoff_packages ;;
         revoke) _load_your_signoff_packages
                 _describe action _signoff_packages ;;
         *)
-            _default
+            _load_all_packages
+            _describe action _signoff_packages
             return
         ;;
       esac
