@@ -166,12 +166,13 @@ def args_func(args):
     for pkg in pkgs:
         args.format(args, pkg)
 
+
 _installed_packages = None
 def get_installed_packages():
     global _installed_packages
     if _installed_packages is not None:
         return _installed_packages
-    cmd = """pacman -Sl testing community-testing |
+    cmd = """pacman -Sl testing community-testing multilib-testing 2>/dev/null |
              awk '/\[installed\]$/ { print $2 }' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
