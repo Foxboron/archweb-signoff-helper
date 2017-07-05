@@ -24,7 +24,7 @@
 
 pkgname=signoff-git
 _pkgname=archweb-signoff-helper
-pkgver=r3.e69dd7c
+pkgver=r19.720dec6
 pkgrel=1
 pkgdesc="Detects packages installed from testing and reports the ones you haven't signed off"
 arch=("any")
@@ -43,6 +43,7 @@ package() {
   install -Dm755 "${srcdir}/${_pkgname}/signoff.py" "${pkgdir}/usr/bin/signoff"
   install -Dm644 "${srcdir}/${_pkgname}/archweb.conf" "${pkgdir}/usr/share/signoff/archweb.conf"
   install -Dm644 "${srcdir}/${_pkgname}/LICENSE" "${pkgdir}/usr/share/licenses/signoff/LICENSE"
+  install -Dm644 "${srcdir}/${_pkgname}/cmp/zsh/_signoff" "${pkgdir}/usr/share/zsh/site-functions/_signoff"
 
 }
 
