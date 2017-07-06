@@ -255,19 +255,19 @@ if __name__ == "__main__":
 
     # Approvals
     sub_approvals = subparsers.add_parser('approvals',
-                                        description=approvals.__doc__,
-                                        help='list package approvals')
+                                          description=approvals.__doc__,
+                                          help='list package approvals')
     sub_approvals.add_argument("package", metavar="pkg",
-                             nargs="?",
-                             default="",
-                             help="Package from testing")
+                               nargs="?",
+                               default="",
+                               help="Package from testing")
     sub_approvals.add_argument("-f", dest="filter",
-                             metavar="{Yes, No}",
-                             choices=["Yes", "No"],
-                             help="Filter approval status")
+                               metavar="{Yes, No}",
+                               choices=["Yes", "No"],
+                               help="Filter approval status")
     sub_approvals.add_argument("-u", dest="user",
-                             metavar="USER",
-                             help="User that has signed off")
+                               metavar="USER",
+                               help="User that has signed off")
     sub_approvals.set_defaults(format=approvals)
 
 
@@ -283,22 +283,22 @@ if __name__ == "__main__":
 
     # Approve
     sub_approve = subparsers.add_parser('approve',
-                                         description=approve.__doc__,
-                                         help='signoff package inn testing')
+                                        description=approve.__doc__,
+                                        help='signoff package inn testing')
     sub_approve.add_argument("package", metavar="pkg",
-                              nargs="?",
-                              default="",
-                              help="Package from testing")
+                             nargs="?",
+                             default="",
+                             help="Package from testing")
     sub_approve.set_defaults(func=approve, format=None)
 
     # Revoke
     sub_revoke = subparsers.add_parser('revoke',
-                                         description=revoke.__doc__,
-                                         help='revoke package signoff')
+                                       description=revoke.__doc__,
+                                       help='revoke package signoff')
     sub_revoke.add_argument("package", metavar="pkg",
-                              nargs="?",
-                              default="",
-                              help="Package from testing")
+                            nargs="?",
+                            default="",
+                            help="Package from testing")
     sub_revoke.set_defaults(func=revoke, format=None)
 
     args = parser.parse_args(sys.argv[1:])
