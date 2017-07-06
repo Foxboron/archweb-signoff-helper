@@ -73,6 +73,7 @@ class Session:
             else:
                 pkg['short_signoffs'] = []
             pkg['repo'] = pkg['repo'].lower()
+            pkg['approved'] = 'Yes' if pkg['approved'] else 'No'
             if not (pkg['arch'] in CONFIG["Architectures"] and pkg['target_repo'].lower() in CONFIG["Repositories"]):
                 packages.remove(pkg)
         with open(CACHE_DIR+"/packages.json", "r+") as f:
