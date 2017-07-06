@@ -174,6 +174,7 @@ def get_installed_packages():
         return _installed_packages
     cmd = """pacman -Sl testing community-testing multilib-testing 2>/dev/null |
              awk '/\[installed\]$/ { print $2 }' |
+             xargs expac '%e %n' |
              awk '{b=( ($1=="(null)") ? $2 : $1); print b}' |
              uniq"""
     _installed_packages = subprocess.getoutput(cmd).split("\n")
